@@ -23,6 +23,7 @@ public class UserProfile extends Entity {
 
     @Column(nullable = false, unique = true)
     private String phone;
+
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "userProfile", cascade = CascadeType.REMOVE)
     @ToString.Exclude
     private List<ItemOwnership> ownerships = new ArrayList<>();

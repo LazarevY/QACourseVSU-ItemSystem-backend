@@ -26,6 +26,7 @@ public class VisualizationData extends Entity {
     @OneToMany(mappedBy = "vdata")
     @ToString.Exclude
     private List<ItemCategory> categories = new ArrayList<>();
+
     @Convert(converter = HashMapConverter.class)
     @Column(length = 512)
     private Map<String, Object> visualizationData;
