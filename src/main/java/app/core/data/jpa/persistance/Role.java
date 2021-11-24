@@ -10,7 +10,6 @@ import javax.persistence.Id;
 public class Role {
 
     public static final Role ADMIN = new Role(0, "ADMIN");
-
     @Id
     private long id;
     private String value;

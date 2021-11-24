@@ -23,9 +23,8 @@ public class ItemOwnership extends app.core.data.jpa.persistance.Entity {
     @JoinColumn(name = "item_id", nullable = false)
     private Item item;
 
-    //@Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime ownershipStartDate;
-    //@Temporal(TemporalType.TIMESTAMP)
+
     private LocalDateTime ownershipEndDate;
 
     public interface ItemsOnly {

@@ -17,9 +17,7 @@ import java.util.List;
 @NoArgsConstructor
 public class UserProfile extends Entity {
 
-    private String name;
-    private String surname;
-    private String patronymic;
+    private String fullName;
 
     @Column(nullable = false, unique = true)
     private String phone;
@@ -28,10 +26,8 @@ public class UserProfile extends Entity {
     @ToString.Exclude
     private List<ItemOwnership> ownerships = new ArrayList<>();
 
-    public UserProfile(String name, String surname, String patronymic, String phone) {
-        this.name = name;
-        this.surname = surname;
-        this.patronymic = patronymic;
+    public UserProfile(String fullName, String phone) {
+        this.fullName = fullName;
         this.phone = phone;
     }
 }

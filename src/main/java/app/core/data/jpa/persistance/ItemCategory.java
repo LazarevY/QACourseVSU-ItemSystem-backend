@@ -8,6 +8,7 @@ import lombok.ToString;
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @javax.persistence.Entity
 @Getter
@@ -17,9 +18,10 @@ import java.util.List;
 @SequenceGenerator(name = "item_cat_seq_gen", sequenceName = "item_cat_seq", initialValue = 1, allocationSize = 10)
 public class ItemCategory extends BaseEntity {
 
+
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "item_cat_seq_gen")
-    private Long code;
+    private Long id;
 
     @ManyToOne
     @JoinColumn(name = "parent_category_id")
@@ -50,10 +52,27 @@ public class ItemCategory extends BaseEntity {
             parentItemCategory.getDaughterCategories().add(this);
     }
 
+    public ItemCategory(VisualizationData vdata, String name, String description) {
+        this.vdata = vdata;
+        this.name = name;
+        this.description = description;
+    }
+
+    private ItemCategory(Long id, ItemCategory parentItemCategory, VisualizationData vdata, String name, String description) {
+        this(parentItemCategory, vdata, name, description);
+        this.id = id;
+    }
+
+    public Long getCategoryCode(){
+        return id;
+    }
+
     @PreRemove
     private void preRemove() {
         daughterCategories.forEach(itemCategory -> itemCategory.setParentItemCategory(null));
         items.forEach(itemCategory -> itemCategory.setItemCategory(null));
+        Optional.ofNullable(parentItemCategory).ifPresent(itemCategory ->
+                itemCategory.daughterCategories.remove(this));
     }
 
     public void setParentItemCategory(ItemCategory parentItemCategory) {
@@ -64,7 +83,7 @@ public class ItemCategory extends BaseEntity {
 
     @Override
     public Long getID() {
-        return code;
+        return id;
     }
 
     @Override

@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.data.jpa.repository.Query;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -21,6 +22,9 @@ public class Item extends BaseEntity {
     @Column(unique = true)
     @SequenceGenerator(name = "item_seq_gen", sequenceName = "item_seq", initialValue = 100, allocationSize = 10)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "item_seq_gen")
+    private Long id;
+
+    @Column(unique = true)
     private Long code;
 
     @ManyToOne
@@ -39,6 +43,8 @@ public class Item extends BaseEntity {
 
     private String description;
 
+    private boolean busy = false;
+
     public Item(ItemCategory itemCategory, VisualizationData visualizationData, String name, String description) {
         this.itemCategory = itemCategory;
         this.visualizationData = visualizationData;
@@ -46,9 +52,19 @@ public class Item extends BaseEntity {
         this.description = description;
     }
 
+    public Item(VisualizationData visualizationData, String name, String description) {
+        this.visualizationData = visualizationData;
+        this.name = name;
+        this.description = description;
+    }
+
+    public Long getItemCode(){
+        return id;
+    }
+
     @Override
     public Long getID() {
-        return code;
+        return id;
     }
 
     @Override
