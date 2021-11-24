@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.ColumnDefault;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -15,7 +16,7 @@ import java.util.Optional;
 @Setter
 @ToString
 @NoArgsConstructor
-@SequenceGenerator(name = "item_cat_seq_gen", sequenceName = "item_cat_seq", initialValue = 1, allocationSize = 10)
+@SequenceGenerator(name = "item_cat_seq_gen", sequenceName = "item_cat_seq", initialValue = 2, allocationSize = 10)
 public class ItemCategory extends BaseEntity {
 
 
@@ -48,7 +49,7 @@ public class ItemCategory extends BaseEntity {
         this.vdata = vdata;
         this.name = name;
         this.description = description;
-        if (parentItemCategory != null)
+        if (parentItemCategory != null && parentItemCategory.getID() != 0)
             parentItemCategory.getDaughterCategories().add(this);
     }
 

@@ -36,19 +36,32 @@ public class ItemRepositoryCustomImpl implements ItemRepositoryCustom {
 
         if (criteria.getItemType() == ItemDTO.ItemCriteria.ItemType.BUSY && criteria.getOwnerPattern() != null) {
             joinOwnership = itemRoot.join("ownerships", JoinType.LEFT);
+            predicates.add(cb.isNull(joinOwnership.get("ownershipEndDate")));
             joinUserProfile = joinOwnership.join("userProfile", JoinType.LEFT);
-            predicates.add(cb.like(joinUserProfile.get("phone"), String.format("%%%s%%", criteria.getOwnerPattern())));
+            if (criteria.isUseOwnerPatternAsPhone()){
+                predicates.add(cb.like(joinUserProfile.get("phone"), String.format("%%%s%%", criteria.getOwnerPattern())));
+            } else {
+                predicates.add(cb.like(cb.lower(joinUserProfile.get("fullName")), String.format("%%%s%%", criteria.getOwnerPattern().toLowerCase(Locale.ROOT))));
+            }
+
         }
         if (criteria.getNamePattern() != null) {
             predicates.add(cb.like(cb.lower(itemRoot.get("name")), String.format("%%%s%%", criteria.getNamePattern().toLowerCase(Locale.ROOT))));
         }
 
         if (criteria.getCategories() != null && !criteria.getCategories().isEmpty()) {
-            CriteriaBuilder.In<Long> id = cb.in(itemRoot.get("itemCategory").get("id"));
+
+            final Expression<Long> catId = itemRoot.get("itemCategory").get("id");
+
+            CriteriaBuilder.In<Long> id = cb.in(catId);
             for (Long cId : criteria.getCategories()) {
                 id.value(cId);
             }
-            predicates.add(id);
+
+            Predicate result = criteria.isIncludeNoCategory()?
+                    cb.or(cb.isNull(catId), id) : id;
+
+            predicates.add(result);
         }
         List<Order> orders = new ArrayList<>();
         if (sort.getCriteria() != ItemDTO.ItemSort.Criteria.NO) {
@@ -74,13 +87,9 @@ public class ItemRepositoryCustomImpl implements ItemRepositoryCustom {
 
     private void addUserSortCriteria(CriteriaBuilder cb, From<?, ?> query, ItemDTO.ItemSort sort, List<Order> orders) {
         if (sort.getIsDesc()) {
-            orders.add(cb.desc(query.get("surname")));
-            orders.add(cb.desc(query.get("name")));
-            orders.add(cb.desc(query.get("patronymic")));
+            orders.add(cb.desc(query.get("fullName")));
         } else {
-            orders.add(cb.asc(query.get("surname")));
-            orders.add(cb.asc(query.get("name")));
-            orders.add(cb.asc(query.get("patronymic")));
+            orders.add(cb.asc(query.get("fullName")));
         }
     }
 

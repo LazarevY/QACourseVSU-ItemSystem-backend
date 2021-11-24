@@ -6,6 +6,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
@@ -45,6 +46,7 @@ public class ItemDTO {
         private String ownerPattern;
         private boolean useOwnerPatternAsPhone;
         private List<Long> categories = new ArrayList<>();
+        private boolean includeNoCategory = true;
         private ItemType itemType = ItemType.BOTH;
     }   
 
