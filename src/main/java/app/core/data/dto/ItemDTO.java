@@ -38,6 +38,8 @@ public class ItemDTO {
     @NoArgsConstructor
     public static class ItemCriteria {
 
+        public static final ItemCriteria NO_CRITERIA = new ItemCriteria();
+
         public enum ItemType {
             FREE, BUSY, BOTH
         }

@@ -20,12 +20,16 @@ import org.springframework.test.context.TestPropertySource;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @DataJpaTest
 @ContextConfiguration(classes = {StartApplication.class})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @TestPropertySource("classpath:application-test.properties")
+@DisplayName("Item repository tests")
 public class ItemRepositoryTDDTest {
 
     @Autowired
@@ -40,7 +44,7 @@ public class ItemRepositoryTDDTest {
     private TestData data;
 
 
-    class TestData{
+    class TestData {
 
         LocalDateTime dateMin = LocalDateTime.now();
         LocalDateTime dateMax = LocalDateTime.now();
@@ -48,22 +52,22 @@ public class ItemRepositoryTDDTest {
         ItemCategory c1 = em.persist(new ItemCategory(null, "NAME1", "D1"));
         ItemCategory c2 = em.persist(new ItemCategory(c1, null, "NAMwwwwE2", "D1"));
         ItemCategory c3 = em.persist(new ItemCategory(null, "VeryCoolNAme", "D1"));
-        ItemCategory c4 = em.persist(new ItemCategory(c3,null, "coOlname", "D1"));
-        ItemCategory c5 = em.persist(new ItemCategory(c3,null, "NameNAme", "D1"));
-        ItemCategory c6 = em.persist(new ItemCategory(c4,null, "ADAD", "D1"));
-        ItemCategory c7 = em.persist(new ItemCategory(c5,null, "AmeN", "D1"));
+        ItemCategory c4 = em.persist(new ItemCategory(c3, null, "coOlname", "D1"));
+        ItemCategory c5 = em.persist(new ItemCategory(c3, null, "NameNAme", "D1"));
+        ItemCategory c6 = em.persist(new ItemCategory(c4, null, "ADAD", "D1"));
+        ItemCategory c7 = em.persist(new ItemCategory(c5, null, "AmeN", "D1"));
 
 
         Item i1 = em.persist(new Item(null, "Item1", "D1"));
         Item i2 = em.persist(new Item(null, "Item2", "D1"));
-        Item i3 = em.persist(new Item(c1,null, "Splash", "D1"));
-        Item i4 = em.persist(new Item(c1,null, "Play", "D1"));
-        Item i5 = em.persist(new Item(c2,null, "Split", "D1"));
-        Item i6 = em.persist(new Item(c3,null, "Moooo", "D1"));
-        Item i7 = em.persist(new Item(c4,null, "Moa", "D1"));
-        Item i8 = em.persist(new Item(c5,null, "oao", "D1"));
-        Item i9 = em.persist(new Item(c6,null, "ei", "D1"));
-        Item i10 = em.persist(new Item(c7,null, "neie", "D1"));
+        Item i3 = em.persist(new Item(c1, null, "Splash", "D1"));
+        Item i4 = em.persist(new Item(c1, null, "Play", "D1"));
+        Item i5 = em.persist(new Item(c2, null, "Split", "D1"));
+        Item i6 = em.persist(new Item(c3, null, "Moooo", "D1"));
+        Item i7 = em.persist(new Item(c4, null, "Moa", "D1"));
+        Item i8 = em.persist(new Item(c5, null, "oao", "D1"));
+        Item i9 = em.persist(new Item(c6, null, "ei", "D1"));
+        Item i10 = em.persist(new Item(c7, null, "neie", "D1"));
 
         UserProfile u1 = em.persist(new UserProfile("Петров Андрей Владимирович", "+7-(952)-99-92-15"));
         UserProfile u2 = em.persist(new UserProfile("Фамилия Артем Пиванович", "+7-(952)-96-98-55"));
@@ -80,7 +84,32 @@ public class ItemRepositoryTDDTest {
         ItemOwnership io9 = em.persist(new ItemOwnership(u1, i8, dateMin, dateMax));
         ItemOwnership io10 = em.persist(new ItemOwnership(u2, i9, dateMin, dateMax));
 
-        TestData(){
+        Stream<Item> allItems = Stream.of(
+                i1,
+                i2,
+                i3,
+                i4,
+                i5,
+                i6,
+                i7,
+                i8,
+                i9,
+                i10);
+
+        Stream<ItemOwnership> allIO = Stream.of(
+                io1,
+                io2,
+                io3,
+                io4,
+                io5,
+                io6,
+                io7,
+                io8,
+                io9,
+                io10
+        );
+
+        TestData() {
             i3.setBusy(true);
             i4.setBusy(true);
             i5.setBusy(true);
@@ -90,18 +119,18 @@ public class ItemRepositoryTDDTest {
     }
 
     @BeforeEach
-    public void initData(){
+    public void initData() {
         data = new TestData();
     }
 
     @AfterEach
-    public void clearData(){
+    public void clearData() {
         em.clear();
     }
 
     @Test
     @DisplayName("When no any criteria - should return all items")
-    public void test_filter_001(){
+    public void test_filter_001() {
         List<Item> items = itemRepo.getAllByCriteriaAndSort(
                 new ItemDTO.ItemCriteria("", "", false, new ArrayList<>(), false, ItemDTO.ItemCriteria.ItemType.BOTH),
                 new ItemDTO.ItemSort(ItemDTO.ItemSort.Criteria.NO));
@@ -110,10 +139,10 @@ public class ItemRepositoryTDDTest {
 
     @Nested
     @DisplayName("When use phone pattern")
-    public class WhenUsePhonePattern{
+    public class WhenUsePhonePattern {
         @Test
         @DisplayName("'+7-(952)' - should return only matches")
-        public void test_filter_002(){
+        public void test_filter_002() {
             List<Item> items = itemRepo.getAllByCriteriaAndSort(
                     new ItemDTO.ItemCriteria("", "+7-(952)", true, new ArrayList<>(), false, ItemDTO.ItemCriteria.ItemType.BUSY),
                     new ItemDTO.ItemSort(ItemDTO.ItemSort.Criteria.NO));
@@ -123,7 +152,7 @@ public class ItemRepositoryTDDTest {
 
         @Test
         @DisplayName("'+7-(952)-99-92-15' - should return only matches")
-        public void test_filter_003(){
+        public void test_filter_003() {
             List<Item> items = itemRepo.getAllByCriteriaAndSort(
                     new ItemDTO.ItemCriteria("", "+7-(952)-99-92-15", true, new ArrayList<>(), false, ItemDTO.ItemCriteria.ItemType.BUSY),
                     new ItemDTO.ItemSort(ItemDTO.ItemSort.Criteria.NO));
@@ -134,7 +163,7 @@ public class ItemRepositoryTDDTest {
 
         @Test
         @DisplayName("'64-25' - should return only matches")
-        public void test_filter_004(){
+        public void test_filter_004() {
             List<Item> items = itemRepo.getAllByCriteriaAndSort(
                     new ItemDTO.ItemCriteria("", "64-25", true, new ArrayList<>(), false, ItemDTO.ItemCriteria.ItemType.BUSY),
                     new ItemDTO.ItemSort(ItemDTO.ItemSort.Criteria.NO));
@@ -144,9 +173,9 @@ public class ItemRepositoryTDDTest {
 
         @Test
         @DisplayName("'+8' - should return only matches")
-        public void test_filter_005(){
+        public void test_filter_005() {
             List<Item> items = itemRepo.getAllByCriteriaAndSort(
-                    new ItemDTO.ItemCriteria("", "+8", true, new ArrayList<>(),false, ItemDTO.ItemCriteria.ItemType.BUSY),
+                    new ItemDTO.ItemCriteria("", "+8", true, new ArrayList<>(), false, ItemDTO.ItemCriteria.ItemType.BUSY),
                     new ItemDTO.ItemSort(ItemDTO.ItemSort.Criteria.NO));
             Assertions.assertEquals(0, items.size());
         }
@@ -157,7 +186,7 @@ public class ItemRepositoryTDDTest {
     public class WhenUseNamePattern {
         @Test
         @DisplayName("matches for only one user - should return only his items")
-        public void test_filter_001(){
+        public void test_filter_001() {
             List<Item> items = itemRepo.getAllByCriteriaAndSort(
                     new ItemDTO.ItemCriteria("", "Андрей", false, new ArrayList<>(), false, ItemDTO.ItemCriteria.ItemType.BUSY),
                     new ItemDTO.ItemSort(ItemDTO.ItemSort.Criteria.NO));
@@ -168,7 +197,7 @@ public class ItemRepositoryTDDTest {
 
         @Test
         @DisplayName("matches for several users - should return only them items")
-        public void test_filter_002(){
+        public void test_filter_002() {
             List<Item> items = itemRepo.getAllByCriteriaAndSort(
                     new ItemDTO.ItemCriteria("", "Иван", false, new ArrayList<>(), false, ItemDTO.ItemCriteria.ItemType.BUSY),
                     new ItemDTO.ItemSort(ItemDTO.ItemSort.Criteria.NO));
@@ -180,7 +209,7 @@ public class ItemRepositoryTDDTest {
 
         @Test
         @DisplayName("matches for all users - should return all busy items")
-        public void test_filter_003(){
+        public void test_filter_003() {
             List<Item> items = itemRepo.getAllByCriteriaAndSort(
                     new ItemDTO.ItemCriteria("", "", false, new ArrayList<>(), false, ItemDTO.ItemCriteria.ItemType.BUSY),
                     new ItemDTO.ItemSort(ItemDTO.ItemSort.Criteria.NO));
@@ -189,7 +218,7 @@ public class ItemRepositoryTDDTest {
 
         @Test
         @DisplayName("matches for another one user - should return only his items")
-        public void test_filter_004(){
+        public void test_filter_004() {
             List<Item> items = itemRepo.getAllByCriteriaAndSort(
                     new ItemDTO.ItemCriteria("", "Фамилия", false, new ArrayList<>(), false, ItemDTO.ItemCriteria.ItemType.BUSY),
                     new ItemDTO.ItemSort(ItemDTO.ItemSort.Criteria.NO));
@@ -200,7 +229,7 @@ public class ItemRepositoryTDDTest {
 
         @Test
         @DisplayName("matches for no one - should return empty")
-        public void test_filter_005(){
+        public void test_filter_005() {
             List<Item> items = itemRepo.getAllByCriteriaAndSort(
                     new ItemDTO.ItemCriteria("", "Имя которого нет", false, new ArrayList<>(), false, ItemDTO.ItemCriteria.ItemType.BUSY),
                     new ItemDTO.ItemSort(ItemDTO.ItemSort.Criteria.NO));
@@ -209,7 +238,7 @@ public class ItemRepositoryTDDTest {
 
         @Test
         @DisplayName("matches for only one full name - should return empty")
-        public void test_filter_006(){
+        public void test_filter_006() {
             List<Item> items = itemRepo.getAllByCriteriaAndSort(
                     new ItemDTO.ItemCriteria("", "Гвоздь Иван Васильевич", false, new ArrayList<>(), false, ItemDTO.ItemCriteria.ItemType.BUSY),
                     new ItemDTO.ItemSort(ItemDTO.ItemSort.Criteria.NO));
@@ -221,11 +250,11 @@ public class ItemRepositoryTDDTest {
 
     @Nested
     @DisplayName("When use categories pattern")
-    public class WhenUseCategoriesPattern{
+    public class WhenUseCategoriesPattern {
 
         @Test
         @DisplayName("matches for only one category - should return related items")
-        public void test_category_001(){
+        public void test_category_001() {
             List<Item> items = itemRepo.getAllByCriteriaAndSort(
                     new ItemDTO.ItemCriteria("", "", false, List.of(data.c7.getID()), false, ItemDTO.ItemCriteria.ItemType.BOTH),
                     new ItemDTO.ItemSort(ItemDTO.ItemSort.Criteria.NO));
@@ -235,7 +264,7 @@ public class ItemRepositoryTDDTest {
 
         @Test
         @DisplayName("matches for several bottom-level category - should return related items")
-        public void test_category_002(){
+        public void test_category_002() {
             List<Item> items = itemRepo.getAllByCriteriaAndSort(
                     new ItemDTO.ItemCriteria("", "", false, List.of(data.c7.getID(), data.c6.getID()), false, ItemDTO.ItemCriteria.ItemType.BOTH),
                     new ItemDTO.ItemSort(ItemDTO.ItemSort.Criteria.NO));
@@ -246,7 +275,7 @@ public class ItemRepositoryTDDTest {
 
         @Test
         @DisplayName("matches for several and for no category - should return related items")
-        public void test_category_003(){
+        public void test_category_003() {
             List<Item> items = itemRepo.getAllByCriteriaAndSort(
                     new ItemDTO.ItemCriteria("", "", false, List.of(data.c7.getID(), data.c6.getID()), true, ItemDTO.ItemCriteria.ItemType.BOTH),
                     new ItemDTO.ItemSort(ItemDTO.ItemSort.Criteria.NO));
@@ -259,7 +288,7 @@ public class ItemRepositoryTDDTest {
 
         @Test
         @DisplayName("matches for all created categoties - should return related items")
-        public void test_category_004(){
+        public void test_category_004() {
             List<Item> items = itemRepo.getAllByCriteriaAndSort(
                     new ItemDTO.ItemCriteria("", "", false,
                             List.of(
@@ -279,7 +308,7 @@ public class ItemRepositoryTDDTest {
 
         @Test
         @DisplayName("matches for all items(empty list) - should return all")
-        public void test_category_005(){
+        public void test_category_005() {
             List<Item> items = itemRepo.getAllByCriteriaAndSort(
                     new ItemDTO.ItemCriteria("", "", false, new ArrayList<>(), false, ItemDTO.ItemCriteria.ItemType.BOTH),
                     new ItemDTO.ItemSort(ItemDTO.ItemSort.Criteria.NO));
@@ -288,7 +317,7 @@ public class ItemRepositoryTDDTest {
 
         @Test
         @DisplayName("matches for all items(all categories chosen) - should return all")
-        public void test_category_006(){
+        public void test_category_006() {
             List<Item> items = itemRepo.getAllByCriteriaAndSort(
                     new ItemDTO.ItemCriteria("", "", false, new ArrayList<>(), true, ItemDTO.ItemCriteria.ItemType.BOTH),
                     new ItemDTO.ItemSort(ItemDTO.ItemSort.Criteria.NO));
@@ -299,11 +328,11 @@ public class ItemRepositoryTDDTest {
 
     @Nested
     @DisplayName("When use item name pattern")
-    public class WhenUseItemNamePattern{
+    public class WhenUseItemNamePattern {
 
         @Test
         @DisplayName("matches ony one item")
-        public void test_item_name_pattern_001(){
+        public void test_item_name_pattern_001() {
             List<Item> items = itemRepo.getAllByCriteriaAndSort(
                     new ItemDTO.ItemCriteria(
                             "item1",
@@ -311,15 +340,15 @@ public class ItemRepositoryTDDTest {
                             false,
                             new ArrayList<>(),
                             false,
-                            ItemDTO.ItemCriteria.ItemType. BOTH),
+                            ItemDTO.ItemCriteria.ItemType.BOTH),
                     new ItemDTO.ItemSort(ItemDTO.ItemSort.Criteria.NO));
             Assertions.assertEquals(1, items.size());
-            Assertions.assertTrue(items.stream().allMatch(i ->  i.equals(data.i1)));
+            Assertions.assertTrue(items.stream().allMatch(i -> i.equals(data.i1)));
         }
 
         @Test
         @DisplayName("matches several item")
-        public void test_item_name_pattern_002(){
+        public void test_item_name_pattern_002() {
             List<Item> items = itemRepo.getAllByCriteriaAndSort(
                     new ItemDTO.ItemCriteria(
                             "E",
@@ -327,13 +356,13 @@ public class ItemRepositoryTDDTest {
                             false,
                             new ArrayList<>(),
                             false,
-                            ItemDTO.ItemCriteria.ItemType. BOTH),
+                            ItemDTO.ItemCriteria.ItemType.BOTH),
                     new ItemDTO.ItemSort(ItemDTO.ItemSort.Criteria.NO));
             Assertions.assertEquals(4, items.size());
-            Assertions.assertTrue(items.stream().anyMatch(i ->  i.equals(data.i1)));
-            Assertions.assertTrue(items.stream().anyMatch(i ->  i.equals(data.i2)));
-            Assertions.assertTrue(items.stream().anyMatch(i ->  i.equals(data.i9)));
-            Assertions.assertTrue(items.stream().anyMatch(i ->  i.equals(data.i10)));
+            Assertions.assertTrue(items.stream().anyMatch(i -> i.equals(data.i1)));
+            Assertions.assertTrue(items.stream().anyMatch(i -> i.equals(data.i2)));
+            Assertions.assertTrue(items.stream().anyMatch(i -> i.equals(data.i9)));
+            Assertions.assertTrue(items.stream().anyMatch(i -> i.equals(data.i10)));
         }
 
     }
@@ -341,11 +370,11 @@ public class ItemRepositoryTDDTest {
     @Nested
     @DisplayName("When use free/busy pattern")
 
-    public class WhenUseFreeBusyPattern{
+    public class WhenUseFreeBusyPattern {
 
         @Test
         @DisplayName("matches all free items")
-        public void test_free_busy_pattern_001(){
+        public void test_free_busy_pattern_001() {
             List<Item> items = itemRepo.getAllByCriteriaAndSort(
                     new ItemDTO.ItemCriteria(
                             "",
@@ -356,16 +385,16 @@ public class ItemRepositoryTDDTest {
                             ItemDTO.ItemCriteria.ItemType.FREE),
                     new ItemDTO.ItemSort(ItemDTO.ItemSort.Criteria.NO));
             Assertions.assertEquals(5, items.size());
-            Assertions.assertTrue(items.stream().anyMatch(i ->  i.equals(data.i1)));
-            Assertions.assertTrue(items.stream().anyMatch(i ->  i.equals(data.i2)));
-            Assertions.assertTrue(items.stream().anyMatch(i ->  i.equals(data.i8)));
-            Assertions.assertTrue(items.stream().anyMatch(i ->  i.equals(data.i9)));
-            Assertions.assertTrue(items.stream().anyMatch(i ->  i.equals(data.i10)));
+            Assertions.assertTrue(items.stream().anyMatch(i -> i.equals(data.i1)));
+            Assertions.assertTrue(items.stream().anyMatch(i -> i.equals(data.i2)));
+            Assertions.assertTrue(items.stream().anyMatch(i -> i.equals(data.i8)));
+            Assertions.assertTrue(items.stream().anyMatch(i -> i.equals(data.i9)));
+            Assertions.assertTrue(items.stream().anyMatch(i -> i.equals(data.i10)));
         }
 
         @Test
         @DisplayName("matches all busy items")
-        public void test_free_busy_pattern_002(){
+        public void test_free_busy_pattern_002() {
             List<Item> items = itemRepo.getAllByCriteriaAndSort(
                     new ItemDTO.ItemCriteria(
                             "",
@@ -376,16 +405,16 @@ public class ItemRepositoryTDDTest {
                             ItemDTO.ItemCriteria.ItemType.BUSY),
                     new ItemDTO.ItemSort(ItemDTO.ItemSort.Criteria.NO));
             Assertions.assertEquals(5, items.size());
-            Assertions.assertTrue(items.stream().anyMatch(i ->  i.equals(data.i3)));
-            Assertions.assertTrue(items.stream().anyMatch(i ->  i.equals(data.i4)));
-            Assertions.assertTrue(items.stream().anyMatch(i ->  i.equals(data.i5)));
-            Assertions.assertTrue(items.stream().anyMatch(i ->  i.equals(data.i6)));
-            Assertions.assertTrue(items.stream().anyMatch(i ->  i.equals(data.i7)));
+            Assertions.assertTrue(items.stream().anyMatch(i -> i.equals(data.i3)));
+            Assertions.assertTrue(items.stream().anyMatch(i -> i.equals(data.i4)));
+            Assertions.assertTrue(items.stream().anyMatch(i -> i.equals(data.i5)));
+            Assertions.assertTrue(items.stream().anyMatch(i -> i.equals(data.i6)));
+            Assertions.assertTrue(items.stream().anyMatch(i -> i.equals(data.i7)));
         }
 
         @Test
         @DisplayName("matches all items")
-        public void test_free_busy_pattern_003(){
+        public void test_free_busy_pattern_003() {
             List<Item> items = itemRepo.getAllByCriteriaAndSort(
                     new ItemDTO.ItemCriteria(
                             "",
@@ -402,11 +431,11 @@ public class ItemRepositoryTDDTest {
 
     @Nested
     @DisplayName("When use mixed pattern")
-    public class WhenUseMixedPattern{
+    public class WhenUseMixedPattern {
 
         @Test
         @DisplayName("matching by categories and owner name")
-        public void test_mixed_filter_001(){
+        public void test_mixed_filter_001() {
             List<Item> items = itemRepo.getAllByCriteriaAndSort(
                     new ItemDTO.ItemCriteria(
                             "",
@@ -417,12 +446,12 @@ public class ItemRepositoryTDDTest {
                             ItemDTO.ItemCriteria.ItemType.BUSY),
                     new ItemDTO.ItemSort(ItemDTO.ItemSort.Criteria.NO));
             Assertions.assertEquals(1, items.size());
-            Assertions.assertTrue(items.stream().allMatch(i ->  i.equals(data.i5)));
+            Assertions.assertTrue(items.stream().allMatch(i -> i.equals(data.i5)));
         }
 
         @Test
         @DisplayName("matching by categories and owner phone")
-        public void test_mixed_filter_002(){
+        public void test_mixed_filter_002() {
             List<Item> items = itemRepo.getAllByCriteriaAndSort(
                     new ItemDTO.ItemCriteria(
                             "",
@@ -433,13 +462,13 @@ public class ItemRepositoryTDDTest {
                             ItemDTO.ItemCriteria.ItemType.BUSY),
                     new ItemDTO.ItemSort(ItemDTO.ItemSort.Criteria.NO));
             Assertions.assertEquals(2, items.size());
-            Assertions.assertTrue(items.stream().anyMatch(i ->  i.equals(data.i3)));
-            Assertions.assertTrue(items.stream().anyMatch(i ->  i.equals(data.i4)));
+            Assertions.assertTrue(items.stream().anyMatch(i -> i.equals(data.i3)));
+            Assertions.assertTrue(items.stream().anyMatch(i -> i.equals(data.i4)));
         }
 
         @Test
         @DisplayName("matching by categories, owner phone and name")
-        public void test_mixed_filter_003(){
+        public void test_mixed_filter_003() {
             List<Item> items = itemRepo.getAllByCriteriaAndSort(
                     new ItemDTO.ItemCriteria(
                             "pl",
@@ -450,9 +479,94 @@ public class ItemRepositoryTDDTest {
                             ItemDTO.ItemCriteria.ItemType.BUSY),
                     new ItemDTO.ItemSort(ItemDTO.ItemSort.Criteria.NO));
             Assertions.assertEquals(2, items.size());
-            Assertions.assertTrue(items.stream().anyMatch(i ->  i.equals(data.i3)));
-            Assertions.assertTrue(items.stream().anyMatch(i ->  i.equals(data.i4)));
+            Assertions.assertTrue(items.stream().anyMatch(i -> i.equals(data.i3)));
+            Assertions.assertTrue(items.stream().anyMatch(i -> i.equals(data.i4)));
         }
     }
 
+    @Nested
+    @DisplayName("Sort testing")
+    public class SortTest {
+
+        @Test
+        @DisplayName("sort by item name asc order")
+        public void test_sort_001() {
+            List<Item> items = itemRepo.getAllByCriteriaAndSort(
+                    ItemDTO.ItemCriteria.NO_CRITERIA,
+                    new ItemDTO.ItemSort(ItemDTO.ItemSort.Criteria.NAME, false));
+            val orderedItems =
+                    data.allItems
+                    .sorted(Comparator.comparing(item -> item.getName().toLowerCase()))
+                    .map(Item::getID)
+                    .collect(Collectors.toList());
+            Assertions.assertEquals(orderedItems, items.stream().map(Item::getID).collect(Collectors.toList()));
+        }
+
+        @Test
+        @DisplayName("sort by item name desc order")
+        public void test_sort_002() {
+            List<Item> items = itemRepo.getAllByCriteriaAndSort(
+                    ItemDTO.ItemCriteria.NO_CRITERIA,
+                    new ItemDTO.ItemSort(ItemDTO.ItemSort.Criteria.NAME, true));
+            val orderedItems =
+                    data.allItems
+                    .sorted(Comparator.comparing(
+                            item -> item.getName().toLowerCase(),
+                            Comparator.reverseOrder())
+                    )
+                    .map(Item::getID)
+                    .collect(Collectors.toList());
+            Assertions.assertEquals(orderedItems, items.stream().map(Item::getID).collect(Collectors.toList()));
+        }
+
+        @Test
+        @DisplayName("sort by owner asc order")
+        public void test_sort_003() {
+            List<Item> items = itemRepo.getAllByCriteriaAndSort(
+                    ItemDTO.ItemCriteria.NO_CRITERIA,
+                    new ItemDTO.ItemSort(ItemDTO.ItemSort.Criteria.OWNER, false));
+            val orderedSteam =
+                    data.allIO
+                            .filter(io -> io.getOwnershipEndDate() == null)
+                            .sorted(Comparator.comparing(
+                                    io -> io.getUserProfile().getFullName().toLowerCase())
+                            )
+                            .map(ItemOwnership::getItem)
+                            .distinct();
+
+            val orderedItems = orderedSteam.collect(Collectors.toList());
+            val orderedItemNames = orderedItems.stream().map(Item::getName).collect(Collectors.toList());
+            val freeItems =  data.allItems.collect(Collectors.toSet());
+            orderedItems.forEach(freeItems::remove);
+            Assertions.assertEquals(10, items.size());
+            Assertions.assertEquals(orderedItemNames, items.stream().map(Item::getName).collect(Collectors.toList()).subList(0, orderedItems.size()));
+            Assertions.assertTrue(items.containsAll(freeItems));
+        }
+
+        @Test
+        @DisplayName("sort by owner desc order")
+        public void test_sort_004() {
+            List<Item> items = itemRepo.getAllByCriteriaAndSort(
+                    ItemDTO.ItemCriteria.NO_CRITERIA,
+                    new ItemDTO.ItemSort(ItemDTO.ItemSort.Criteria.OWNER, true));
+            val orderedSteam =
+                    data.allIO
+                            .filter(io -> io.getOwnershipEndDate() == null)
+                            .sorted(Comparator.comparing(
+                                    io -> io.getUserProfile().getFullName().toLowerCase(),
+                                    Comparator.reverseOrder())
+                            )
+                            .map(ItemOwnership::getItem)
+                            .distinct();
+
+            val orderedItems = orderedSteam.collect(Collectors.toList());
+            val orderedItemNames = orderedItems.stream().map(Item::getName).collect(Collectors.toList());
+            val freeItems =  data.allItems.collect(Collectors.toSet());
+            orderedItems.forEach(freeItems::remove);
+            Assertions.assertEquals(10, items.size());
+            Assertions.assertEquals(orderedItemNames, items.stream().map(Item::getName).collect(Collectors.toList()).subList(orderedItems.size() , 10));
+            Assertions.assertTrue(items.containsAll(freeItems));
+        }
+
+    }
 }
